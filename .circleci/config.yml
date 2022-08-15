@@ -43,6 +43,23 @@ commands:
             fi
             
 jobs:
+  patch-node:
+    docker:
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Update minimist
+          command: |
+            cd /home/circleci/project/backend
+            npm install
+            npm update minimist
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+
   build-frontend:
     docker:
       - image: cimg/node:13.8.0
@@ -132,7 +149,6 @@ jobs:
           command: |
             cd backend
             npm install
-            npm update minimist
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
 
@@ -324,7 +340,9 @@ workflows:
   default:
     jobs:
       - build-frontend
-      - build-backend
+      - patch-node
+      - build-backend:
+          requires: [patch-node]
       - test-frontend:
           requires: [build-frontend]
       - test-backend:
