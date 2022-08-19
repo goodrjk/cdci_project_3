@@ -16,10 +16,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws s3 rm s3://my-S3-<< parameters.id >> --recursive
-            aws cloudformation delete-stack --region << parameters.region >> --stack-name myStack-backend-<< parameters.id >>
-            aws cloudformation delete-stack --region << parameters.region >> --stack-name myStack-frontend-<< parameters.id >>
-            exit 1
+            aws s3 rm s3://udapeople-<< parameters.id >> --recursive
+            aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-BackEnd-<< parameters.id >>
+            aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-Frontend-<< parameters.id >>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -158,11 +157,9 @@ jobs:
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
-#    branches:
-#      only:
-#        - master
     steps:
       - checkout
+      - run: yum -y install tar gzip
       - run:
           name: Ensure back-end infrastructure exists
           command: |
@@ -170,9 +167,9 @@ jobs:
               --region us-east-1 \
               --template-file .circleci/files/backend.yml \
               --tags project=UdaPeople \
-              --stack-name "UdaPeople-BackEnd-${CIRCLE_WORKFLOW_ID:0:5}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"  
-              exit 1
+              --stack-name "UdaPeople-BackEnd-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+          #no_output_timeout: 30m
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -180,24 +177,24 @@ jobs:
               --region us-east-1 \
               --template-file .circleci/files/frontend.yml \
               --tags project=UdaPeople \
-              --stack-name "UdaPeople-FrontEnd-${CIRCLE_WORKFLOW_ID:0:5}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"  
+              --stack-name "UdaPeople-FrontEnd-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
               exit 1
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=UdaPeople-BackEnd-${CIRCLE_WORKFLOW_ID:0:5}"
+              --filters "Name=tag:Name,Values=UdaPeople-BackEnd-${CIRCLE_WORKFLOW_ID:0:7}"
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text >> .circleci/ansible/inventory.txt
-            exit 1
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment:
-          id: ${CIRCLE_WORKFLOW_ID:0:5}
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
+          region: us-east-1
 
   configure-infrastructure:
     docker:
@@ -355,11 +352,11 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-#      - deploy-infrastructure:
-#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [test-feature-branch]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
 #      - configure-infrastructure:
 #          requires: [deploy-infrastructure]
 #      - run-migrations:
