@@ -45,17 +45,19 @@ commands:
 jobs:
   patch-node:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Update minimist
+          name: Audit fix
           command: |
-            cd /home/circleci/project/backend
+            cd backend
             npm install
-            npm update minimist
+            npm audit fix 
+            npm audit fix --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -79,7 +81,7 @@ jobs:
 
   build-backend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
@@ -89,11 +91,7 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit fix 
-            npm audit fix --audit-level=critical
-            npm audit fix --audit-level=critical --force
             npm run build
-            npm ls minimist
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -138,7 +136,6 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
 
   scan-backend:
@@ -343,10 +340,10 @@ workflows:
   default:
     jobs:
       - build-frontend
-      - build-backend
-#      - patch-node
-#      - build-backend:
-#          requires: [patch-node]
+#      - build-backend
+      - patch-node
+      - build-backend:
+          requires: [patch-node]
       - test-frontend:
           requires: [build-frontend]
       - test-backend:
