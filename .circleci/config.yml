@@ -208,7 +208,7 @@ jobs:
       - run: ls -al
       - run: echo "Bob" > stuff.txt
       - run: cat stuff.txt
-      #- run: echo "Bob" >> project/.circleci/ansible/inventory.txt
+      - run: echo "Bob" >> project/.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -229,6 +229,7 @@ jobs:
       - run: pwd
       - run: ls -al
       - run: cat stuff.txt
+      - run: cat project/.circleci/ansible/inventory.txt
       - run:
           name: Install dependencies
           command: |
