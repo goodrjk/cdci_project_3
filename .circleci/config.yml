@@ -213,7 +213,7 @@ jobs:
           name: Install dependencies
           command: |
             python3 -m pip install --upgrade pip
-            python3 -m pip awscli
+            python3 -m pip install awscli
             #python3 -m pip install --user ansible
             #python3 -m pip show ansible
       - run:
