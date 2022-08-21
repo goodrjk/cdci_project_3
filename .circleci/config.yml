@@ -187,8 +187,8 @@ jobs:
               --region us-east-1 \
               --filters "Name=tag:Name,Values=UdaPeople-BackEnd-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> project/.circleci/ansible/inventory.txt
-      - run: cat project/.circleci/ansible/inventory.txt
+              --output text >> .circleci/ansible/inventory.txt
+      - run: cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -217,18 +217,15 @@ jobs:
 
   configure-infrastructure:
     docker:
-      #- image: amazon/aws-cli
       - image: python:3.7-alpine3.11
     steps:
       - checkout
-      #- run: yum -y install tar gzip
       - add_ssh_keys:
           fingerprints: ["0c:55:f7:d7:ad:e3:73:19:0b:e6:c6:46:5c:04:76:94"] 
       - attach_workspace:
           at: ~/
       - run: pwd
       - run: ls -al
-      - run: cat stuff.txt
       - run: cat .circleci/ansible/inventory.txt
       - run:
           name: Install dependencies
@@ -239,9 +236,8 @@ jobs:
       - run:
           name: Configure server
           command: |
-            #ansible-playbook -i inventory.txt main4.yml
-            # Your code here
-            exit 1
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
       # Rollback on failure      
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -383,16 +379,16 @@ workflows:
 #          requires: [build-backend]
 #      - scan-frontend:
 #          requires: [build-frontend]
-#      - deploy-infrastructure:
+      - deploy-infrastructure:
 #          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
 #          filters:
 #            branches:
 #              only: [master]
-      - temp-deploy-infra
+#      - temp-deploy-infra
 #      - configure-infrastructure
       - configure-infrastructure:
-          requires: [temp-deploy-infra]
-#          requires: [deploy-infrastructure]
+          requires: [deploy-infrastructure]
+#          requires: [temp-deploy-infra]
 #      - run-migrations:
 #          requires: [configure-infrastructure]
 #      - deploy-frontend:
