@@ -228,10 +228,16 @@ jobs:
       - run: ls -al
       - run: cat .circleci/ansible/inventory.txt
       - run:
-          name: Install dependencies
+          name: Install dependencies - pip
           command: |
             python3 -m pip install --upgrade pip
+      - run:
+          name: Install dependencies - awscli
+          command: |
             python3 -m pip install --user awscli
+      - run:
+          name: Install dependencies - ansible
+          command: |
             apk add --update ansible 
       - run:
           name: Configure server
