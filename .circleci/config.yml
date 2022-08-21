@@ -229,7 +229,7 @@ jobs:
       - run:
           name: Install dependencies - ssh
           command: |
-            apt add openssh-client
+            apk add openssh-client
       - run: which ssh
       - run: ls -al
       - run: cat .circleci/ansible/inventory.txt
