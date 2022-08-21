@@ -226,6 +226,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - run: pwd
+      - run: which ssh
       - run: ls -al
       - run: cat .circleci/ansible/inventory.txt
       - run:
