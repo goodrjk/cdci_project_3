@@ -243,7 +243,7 @@ jobs:
           name: Configure server
           command: |
             cd .circleci/ansible
-            export ANSIBLE_HOST_KEY_CHECKING=False
+            #export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i inventory.txt configure-server.yml
       # Rollback on failure      
       - destroy-environment:
