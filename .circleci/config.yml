@@ -219,6 +219,10 @@ jobs:
     docker:
       - image: python:3.7-alpine3.11
     steps:
+      - run:
+          name: Install dependencies - ssh git
+          command: |
+            apk add --update openssh-client git
       - checkout
       - add_ssh_keys:
           fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
@@ -226,10 +230,6 @@ jobs:
       - attach_workspace:
           at: ~/
       - run: pwd
-      - run:
-          name: Install dependencies - ssh
-          command: |
-            apk add openssh-client
       - run: which ssh
       - run: ls -al
       - run: cat .circleci/ansible/inventory.txt
