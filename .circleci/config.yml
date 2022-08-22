@@ -32,6 +32,20 @@ commands:
           name: Revert migrations
           # Add when this will run
           command: |
+          
+            ## Your Memstash or kvdb.io GET URL code goes here
+            ## Example: Memstash.io
+            #SUCCESS=$(curl -H "token: e52b52de-ee26-41a5-86e8-e8dcc3d995a5" --request GET https://api.memstash.io/values/migration_<< parameters.workflow_id >>)
+            ## Example: kvdb.io
+            #SUCCESS=$(curl --insecure  https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.workflow_id >>)
+            ## Logic for reverting the database state
+            #if (( $SUCCESS == 1 ));
+            #then
+            #    cd ~/project/backend
+            #    npm install
+            #    npm run migration:revert
+            #fi  
+          
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             SUCCESS = 1
             if(( $SUCCESS==1 )); 
@@ -215,6 +229,47 @@ jobs:
             - project/stuff.txt
             - project/.circleci/ansible/inventory.txt
 
+  alpine-test:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - run:
+          name: Install dependencies - ssh
+          command: |
+            apk add --update openssh-client
+      - run:
+          name: Install dependencies - git
+          command: |
+            apk add --update git
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies - pip
+          command: |
+            python3 -m pip install --upgrade pip
+      - run:
+          name: Install dependencies - awscli
+          command: |
+            python3 -m pip install --user awscli
+      - run:
+          name: Install dependencies - ansible
+          command: |
+            apk add --update ansible 
+      - run:
+          name: Install dependencies - tar
+          command: |
+            apk add --update tar
+       - run:
+          name: Check commands
+          command: |
+            which ssh
+            which ansible
+            which tar
+            which aws
+                        
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
@@ -262,16 +317,23 @@ jobs:
       - image: cimg/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Run migrations
           command: |
-            # Your code here
-            exit 1
+            cd backend
+            npm install 
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
       - run:
-          name: Send migration results to memstash
-          command: |
-            # Your code here
-            exit 1
+   	  name: Send migration status to kvdb.io 
+          command: |   
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+ 	    then
+              # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
+              curl https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
      # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
@@ -279,43 +341,90 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
+      - run: which tar
+      - run: which gzip
       - run:
-          name: Install dependencies
+          name: Install dependencies tar gzip
           command: |
-            # your code here
-            cd frontend
-            npm i
+            yum -y install tar gzip
+
       - run:
           name: Get backend url
           command: |
-            # your code here
+            cat .circleci/ansible/inventory.txt
+            export BACKEND_IP=$(tail .circleci/ansible/inventory.txt)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+
       - run:
           name: Deploy frontend objects
           command: |
-            # your code here
+            cd frontend
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+
       # Here's where you will add some code to rollback on failure      
                     
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.11
     steps:
+      - run:
+          name: Install dependencies - ssh
+          command: |
+            apk add --update openssh-client
+      - run:
+          name: Install dependencies - git
+          command: |
+            apk add --update git
       - checkout
       - add_ssh_keys:
-          fingerprints: ["0c:55:f7:d7:ad:e3:73:19:0b:e6:c6:46:5c:04:76:94"] 
-      # attach workspace
+          fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Install dependencies
+          name: Install dependencies - pip
           command: |
-            # your code here
-            # install the dependencies needed for your playbook
+            python3 -m pip install --upgrade pip
+      - run:
+          name: Install dependencies - awscli
+          command: |
+            python3 -m pip install --user awscli
+      - run:
+          name: Install dependencies - ansible
+          command: |
             apk add --update ansible 
+      - run:
+          name: Install dependencies - tar
+          command: |
+            apk add --update tar
+       - run:
+          name: Check commands
+          command: |
+            which ssh
+            which ansible
+            which tar
+            which aws
+                        
       - run:
           name: Deploy backend
           command: |
-            # your code here
-            ansible-playbook -i inventory.txt main4.yml
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            # Zip the directory
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
@@ -335,10 +444,28 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
+            ## Fetch and prepare the BACKEND_IP env var
+            #export API_URL="http://${BACKEND_IP}:3030"
+            #echo "${API_URL}"
+            #if curl "${API_URL}/api/status" | grep "ok"
+            #then
+            #    return 0
+            #else
+            #    return 1
+            #fi
       - run:
           name: Frontend smoke test.
           command: |
             # your code here
+            #URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+           #echo ${URL} 
+           #if curl -s ${URL} | grep "Welcome"
+           #then
+           #    # Change this to 0 after the job fails
+           #  return 1
+           #else
+           #  return 1
+           #if
       # Here's where you will add some code to rollback on failure  
 
   cloudfront-update:
@@ -354,6 +481,12 @@ jobs:
           name: Update cloudfront distribution
           command: |
             # your code here
+            ## Change the initial stack name, as applicable to you
+            #aws cloudformation deploy \
+            #   --template-file .circleci/files/cloudfront.yml \
+            #   --stack-name InitialStack \
+            #   --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+            #   --tags project=udapeople
       # Here's where you will add some code to rollback on failure  
 
 cleanup:
@@ -367,6 +500,32 @@ cleanup:
             # your code here
             export OldWorkflowID="the id here"
             export STACKS=[] #put the list of stacks here
+            
+            ## Fetch the Old workflow ID
+            #export OldWorkflowID=$(aws cloudformation \
+            #   list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+            #   --no-paginate --output text)
+            #echo OldWorkflowID: "${OldWorkflowID}"
+            #echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+            ## Fetch the stack names          
+            #export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+            #    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            #echo Stack names: "${STACKS[@]}"         
+
+            ## You can use any condition like:
+            ## if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
+            ## if [[ "${OldWorkflowID}" =~ "${STACKS[@]}"  ]]
+            #if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
+            #then
+            ## your code goes here
+            #else
+            ## your code goes here
+            #fi
+            
+            #aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+            #aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+            #aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"            
+
       - run:
           name: Remove old stacks and files
           command: |
@@ -379,6 +538,7 @@ cleanup:
 workflows:
   default:
     jobs:
+      - alpine-test
 #      - build-frontend
 #      - build-backend
 ###      - patch-node
@@ -392,7 +552,7 @@ workflows:
 #          requires: [build-backend]
 #      - scan-frontend:
 #          requires: [build-frontend]
-      - deploy-infrastructure
+##      - deploy-infrastructure
 #      - deploy-infrastructure:
 #          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
 #          filters:
@@ -400,8 +560,8 @@ workflows:
 #              only: [master]
 #      - temp-deploy-infra
 #      - configure-infrastructure
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
+##      - configure-infrastructure:
+##          requires: [deploy-infrastructure]
 #          requires: [temp-deploy-infra]
 #      - run-migrations:
 #          requires: [configure-infrastructure]
