@@ -404,7 +404,7 @@ jobs:
           name: Install dependencies - tar
           command: |
             apk add --update tar
-       - run:
+      - run:
           name: Check commands
           command: |
             which ssh
