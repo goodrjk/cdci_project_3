@@ -270,6 +270,18 @@ jobs:
             which tar
             which aws
                         
+  amazon-test:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - run:
+          name: Check commands
+          command: |
+            which aws
+            which ssh
+            which tar
+            which ansible
+                        
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
@@ -538,7 +550,8 @@ cleanup:
 workflows:
   default:
     jobs:
-      - alpine-test
+      - amazon-test
+#     - alpine-test
 #      - build-frontend
 #      - build-backend
 ###      - patch-node
