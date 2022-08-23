@@ -261,13 +261,17 @@ jobs:
           name: Install dependencies - tar
           command: |
             apk add --update tar
-      - run: ls -alR /root | grep aws
+      - run: ls -al /root | grep aws
+      - run: echo $PATH  
+      - run: export PATH="$PATH:/root"  
+      - run: echo $PATH  
       - run:
           name: Check commands
           command: |
             which ssh
             which ansible
             which tar
+            which /root/aws
             which aws
                         
   amazon-test:
