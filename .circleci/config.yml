@@ -261,7 +261,7 @@ jobs:
           name: Install dependencies - tar
           command: |
             apk add --update tar
-      - run: ls -alR /root
+      - run: ls -alR /root | grep aws
       - run:
           name: Check commands
           command: |
