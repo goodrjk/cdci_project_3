@@ -274,6 +274,7 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
+      - run: ls -al /usr/bin
       - run:
           name: Check commands
           command: |
