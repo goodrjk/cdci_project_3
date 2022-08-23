@@ -274,7 +274,7 @@ jobs:
             which ssh
             which ansible
             which tar
-            which /root/aws
+            which /root/.local/bin/aws
             which aws
                         
   amazon-test:
