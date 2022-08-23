@@ -365,14 +365,14 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
-      - run: which tar
-      - run: which gzip
       - run:
           name: Install dependencies tar gzip
           command: |
             yum -y install tar gzip
+      - run: which tar
+      - run: which gzip
+      - attach_workspace:
+          at: ~/
 
       - run:
           name: Get backend url
@@ -434,6 +434,14 @@ jobs:
           name: Install dependencies - tar
           command: |
             apk add --update tar
+      - run:
+          name: Install dependencies - nodejs 
+          command: |
+            apk add --update nodejs
+      - run:
+          name: Install dependencies - npm
+          command: |
+            apk add --update npm
       - run:
           name: Check commands
           command: |
@@ -600,11 +608,13 @@ workflows:
 #          requires: [temp-deploy-infra]
 #      - run-migrations:
 #          requires: [configure-infrastructure]
-      - deploy-frontend:
+      - deploy-frontend
+#      - deploy-frontend:
         #requires: [run-migrations]
-          requires: [configure-infrastructure]
-      - deploy-backend:
-          requires: [configure-infrastructure]
+#          requires: [configure-infrastructure]
+      - deploy-backend
+#      - deploy-backend:
+#          requires: [configure-infrastructure]
             #requires: [run-migrations]
 #      - smoke-test:
 #          requires: [deploy-backend, deploy-frontend]
