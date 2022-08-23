@@ -262,6 +262,7 @@ jobs:
           name: Install dependencies - tar
           command: |
             apk add --update tar
+      - run: ls -alR /root
       - run:
           name: Check commands
           command: |
@@ -551,8 +552,8 @@ cleanup:
 workflows:
   default:
     jobs:
-      - amazon-test
-#     - alpine-test
+#     - amazon-test
+     - alpine-test
 #      - build-frontend
 #      - build-backend
 ###      - patch-node
