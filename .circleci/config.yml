@@ -232,6 +232,8 @@ jobs:
   alpine-test:
     docker:
       - image: python:3.7-alpine3.11
+    environment:
+      PATH: "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin"
     steps:
       - run:
           name: Install dependencies - ssh
@@ -597,3 +599,4 @@ workflows:
 #      - cleanup:
 #          requires: [cloudfront-update]
 #
+
