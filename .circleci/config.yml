@@ -527,25 +527,29 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
-      - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies - curl
           command: |
             apk add --update curl
-      - run:
-          name: Get backend url
-          command: |
-            # your code here
+#      - run:
+#          name: Get backend url
+#          command: |
+#            # your code here
       - run:
           name: Backend smoke test.
           command: |
             # Fetch and prepare the BACKEND_IP env var
+            export BACKEND_IP=$(tail -1 .circleci/ansible/inventory.txt)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
+            echo "API_URL = ${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
+                curl "${API_URL}/api/status" 
                 return 0
             else
+                curl "${API_URL}/api/status" 
                 return 1
             fi
       - run:
@@ -555,10 +559,12 @@ jobs:
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
+                curl -s ${URL} 
                 # Change this to 0 after the job fails
-              return 1
+                return 1
             else
-              return 1
+                curl -s ${URL} 
+                return 1
             if
       # Here's where you will add some code to rollback on failure  
 
@@ -634,7 +640,7 @@ workflows:
     jobs:
 #     - amazon-test
 #     - alpine-test
-      - alpine-late-test
+#      - alpine-late-test
       - build-frontend
       - build-backend
 ###      - patch-node
@@ -669,8 +675,8 @@ workflows:
       - deploy-backend:
           requires: [configure-infrastructure]
             #requires: [run-migrations]
-#      - smoke-test:
-#          requires: [deploy-backend, deploy-frontend]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
 #      - cloudfront-update:
 #          requires: [smoke-test]
 #      - cleanup:
