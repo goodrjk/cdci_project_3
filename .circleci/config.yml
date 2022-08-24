@@ -232,6 +232,10 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - run:
+          name: Install dependencies - curl
+          command: |
+            apk add --update curl
+      - run:
           name: Check commands
           command: |
             which curl
@@ -525,9 +529,9 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install dependencies - curl
           command: |
-            # your code here
+            apk add --update curl
       - run:
           name: Get backend url
           command: |
@@ -631,8 +635,8 @@ workflows:
 #     - amazon-test
 #     - alpine-test
       - alpine-late-test
-      - build-frontend
-      - build-backend
+        #      - build-frontend
+        #- build-backend
 ###      - patch-node
 ###      - build-backend:
 ###          requires: [patch-node]
