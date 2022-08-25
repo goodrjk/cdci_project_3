@@ -353,6 +353,7 @@ jobs:
           event: on_fail
           region: us-east-1
 
+
   run-migrations:
     docker:
       - image: cimg/node:13.8.0
