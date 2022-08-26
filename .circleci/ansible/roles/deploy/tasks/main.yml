@@ -1,35 +1,25 @@
 ---
-- name: "update apt packages."
+- name: "Where am i"
   become: yes
-  apt:
-    update_cache: yes
+  shell: |
+    pwd
+    ls -al
 
-- name: "upgrade packages"
+- name: "Copy tarball"
   become: yes
-  apt:
-    upgrade: yes
+  shell: |
+    cp /root/project/artifact.tar.gz ~ 
 
-- name: "remove dependencies that are no longer required"
+- name: "Extract tarball"
   become: yes
-  apt:
-    autoremove: yes
+  shell: |
+    cd 
+    pwd
+    tar -xvzf artifact.tar.gz
+    ls -al
 
-- name: "install dependencies."
+- name: "Start application"
   become: yes
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
-    update_cache: yes
-
-- name: "install pm2"
-  become: yes
-  npm:
-    name: pm2
-    global: yes
-    production: yes
-    state: present
-
-- name: "Executing node"
   shell: |
     npm install
     pm2 stop default
