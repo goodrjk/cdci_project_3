@@ -312,17 +312,17 @@ jobs:
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
-    environment:
-      PATH: "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin"
-      TYPEORM_CONNECTION: $TYPEORM_CONNECTION
-      TYPEORM_ENTITIES: $TYPEORM_ENTITIES
-      TYPEORM_HOST: $TYPEORM_HOST
-      TYPEORM_PORT: $TYPEORM_PORT
-      TYPEORM_USERNAME: $TYPEORM_USERNAME
-      TYPEORM_PASSWORD: $TYPEORM_PASSWORD
-      TYPEORM_DATABASE: $TYPEORM_DATABASE
-      TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
-      TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+        environment:
+          PATH: "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+          TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
     steps:
       - run:
           name: Install dependencies - ssh git
@@ -337,6 +337,7 @@ jobs:
       - run: pwd
       - run: which ssh
       - run: ls -al
+      - run: env
       - run: cat .circleci/ansible/inventory.txt
       - run:
           name: Install dependencies - pip
