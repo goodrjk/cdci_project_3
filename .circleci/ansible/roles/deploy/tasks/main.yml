@@ -11,6 +11,8 @@
   become: yes
   shell: |
     cd /home/ubuntu
+    mkdir backend
+    cd backend
     tar -xvf artifact.tar.gz
 
 - name: "Start application"
