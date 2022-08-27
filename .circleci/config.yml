@@ -587,12 +587,21 @@ jobs:
             export BACKEND_IP=$(tail -1 .circleci/ansible/inventory.txt)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
-            if curl "${API_URL}/api/status" | grep "ok"
+            export BACKEND_TGT="${API_URL}/api/status"
+            echo "BACKEND_TGT = ${BACKEND_TGT}"
+            export CURL_RESULT=`curl -s ${BACKEND_TGT}`
+            echo "CURL_RESULT = ${CURL_RESULT}"
+            export CURL_RESULT=`curl -s ${BACKEND_TGT} | grep ok`
+            echo "CURL_RESULT = ${CURL_RESULT}"
+
+            if [ -n ${CURL_RESULT} ]
             then
-                curl "${API_URL}/api/status" 
+                echo "Curl success"
+                curl -s "${API_URL}/api/status" 
                 return 0
             else
-                curl "${API_URL}/api/status" 
+                echo "Curl failure"
+                curl -s "${API_URL}/api/status" 
                 return 1
             fi
       - run:
