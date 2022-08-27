@@ -13,7 +13,7 @@
     cd /home/ubuntu
     mkdir backend
     cd backend
-    tar -xvf artifact.tar.gz
+    tar -xvf /home/ubuntu/artifact.tar.gz
 
 - name: "Start application"
   become: yes
