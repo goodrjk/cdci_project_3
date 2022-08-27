@@ -1,22 +1,17 @@
 ---
-- name: "Where am i"
-  become: yes
-  shell: |
-    pwd
-    ls -al
-
 - name: "Copy tarball"
-  become: yes
-  shell: |
-    cp /root/project/artifact.tar.gz ~ 
+  ansible.builtin.copy:
+    src: /root/project/artifact.tar.gz 
+    dest: /home/ubuntu
+    owner: ubuntu
+    group: ubuntu
+    mode: 0755
 
 - name: "Extract tarball"
   become: yes
   shell: |
-    cd 
-    pwd
-    tar -xvzf artifact.tar.gz
-    ls -al
+    cd /home/ubuntu
+    tar -xvf artifact.tar.gz
 
 - name: "Start application"
   become: yes
