@@ -16,8 +16,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            #aws s3 rm s3://udapeople-<< parameters.id >> --recursive
-            aws s3 rb s3://udapeople-<< parameters.id >> --force
+            aws s3 rm s3://udapeople-<< parameters.id >> --recursive
+            #aws s3 rb s3://udapeople-<< parameters.id >> --force
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-BackEnd-<< parameters.id >>
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-Frontend-<< parameters.id >>
 
@@ -31,7 +31,9 @@ commands:
       - run:
           name: Revert migrations
           # Add when this will run
+          when: on_fail
           command: |
+            echo "In revert-migrations"
             ## Example: kvdb.io
             SUCCESS=$(curl --insecure https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_<< parameters.workflow_id >>)
             echo $SUCCESS
@@ -42,17 +44,18 @@ commands:
                 cd ~/project/backend
                 npm install
                 npm run migration:revert
+                echo "Ran migration:revert"
             fi  
           
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
-            then
-              cd ~/project/backend
-              npm install
-              npm run migrations:revert
-              exit 1
-            fi
+#            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+#            SUCCESS = 1
+#            if(( $SUCCESS==1 )); 
+#            then
+#              cd ~/project/backend
+#              npm install
+#              npm run migrations:revert
+#              exit 1
+#            fi
             
 jobs:
   patch-node:
@@ -308,6 +311,7 @@ jobs:
             which gzip
             which git
             which ansible
+            which curl
                         
   configure-infrastructure:
     docker:
@@ -401,6 +405,10 @@ jobs:
               curl https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
      # Here's where you will add some code to rollback on failure      
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          event: on_fail
+          region: us-east-1
 
   deploy-frontend:
     docker:
@@ -477,6 +485,8 @@ jobs:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
           region: us-east-1
+      - revert-migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
                     
   deploy-backend:
     docker:
@@ -565,6 +575,8 @@ jobs:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
           region: us-east-1
+      - revert-migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test:
     docker:
@@ -590,8 +602,6 @@ jobs:
             echo "API_URL = ${API_URL}"
             export BACKEND_TGT="${API_URL}/api/status"
             echo "BACKEND_TGT = ${BACKEND_TGT}"
-            export CURL_RESULT=`curl -s ${BACKEND_TGT}`
-            echo "CURL_RESULT = ${CURL_RESULT}"
             export CURL_RESULT=`curl -s ${BACKEND_TGT} | grep ok`
             echo "CURL_RESULT = ${CURL_RESULT}"
 
@@ -608,8 +618,6 @@ jobs:
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
             echo "FRONT URL = ${URL}" 
-            export CURL_RESULT=`curl -s ${URL}`
-            echo "CURL_RESULT = ${CURL_RESULT}"
             export CURL_RESULT=`curl -s ${URL} | grep Welcome`
             echo "CURL_RESULT = ${CURL_RESULT}"
             if curl -s ${URL} | grep "Welcome"
@@ -620,6 +628,12 @@ jobs:
                 return 1
             fi
       # Here's where you will add some code to rollback on failure  
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          event: on_fail
+          region: us-east-1
+      - revert-migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
@@ -641,6 +655,12 @@ jobs:
             #   --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             #   --tags project=udapeople
       # Here's where you will add some code to rollback on failure  
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          event: on_fail
+          region: us-east-1
+      - revert-migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
 
 cleanup:
     docker:
@@ -691,49 +711,49 @@ cleanup:
 workflows:
   default:
     jobs:
-#     - amazon-test
-#     - alpine-test
-#      - alpine-late-test
-      - build-frontend
-      - build-backend
-###      - patch-node
-###      - build-backend:
-###          requires: [patch-node]
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
-##      - deploy-infrastructure
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [master]
-#      - temp-deploy-infra
-#      - configure-infrastructure
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-#          requires: [temp-deploy-infra]
-      - run-migrations:
-          requires: [configure-infrastructure]
-#      - deploy-frontend
-
-      - deploy-frontend:
-          requires: [run-migrations]
-          #requires: [configure-infrastructure]
-#      - deploy-backend
-      - deploy-backend:
-          #requires: [configure-infrastructure]
-          requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-#      - cloudfront-update:
-#          requires: [smoke-test]
-#      - cleanup:
-#          requires: [cloudfront-update]
+      - amazon-test
+##     - alpine-test
+##      - alpine-late-test
+#      - build-frontend
+#      - build-backend
+####      - patch-node
+####      - build-backend:
+####          requires: [patch-node]
+#      - test-frontend:
+#          requires: [build-frontend]
+#      - test-backend:
+#          requires: [build-backend]
+#      - scan-backend:
+#          requires: [build-backend]
+#      - scan-frontend:
+#          requires: [build-frontend]
+###      - deploy-infrastructure
+#      - deploy-infrastructure:
+#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+##          filters:
+##            branches:
+##              only: [master]
+##      - temp-deploy-infra
+##      - configure-infrastructure
+#      - configure-infrastructure:
+#          requires: [deploy-infrastructure]
+##          requires: [temp-deploy-infra]
+#      - run-migrations:
+#          requires: [configure-infrastructure]
+##      - deploy-frontend
 #
-
+#      - deploy-frontend:
+#          requires: [run-migrations]
+#          #requires: [configure-infrastructure]
+##      - deploy-backend
+#      - deploy-backend:
+#          #requires: [configure-infrastructure]
+#          requires: [run-migrations]
+#      - smoke-test:
+#          requires: [deploy-backend, deploy-frontend]
+##      - cloudfront-update:
+##          requires: [smoke-test]
+##      - cleanup:
+##          requires: [cloudfront-update]
+##
+#
