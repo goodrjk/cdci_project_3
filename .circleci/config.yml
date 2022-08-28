@@ -16,8 +16,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws s3 rm s3://udapeople-<< parameters.id >> --recursive
-            #aws s3 rb s3://udapeople-<< parameters.id >> --force
+            #aws s3 rm s3://udapeople-<< parameters.id >> --recursive
+            aws s3 rb s3://udapeople-<< parameters.id >> --force
             sleep 60
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-BackEnd-<< parameters.id >>
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-Frontend-<< parameters.id >>
@@ -36,7 +36,7 @@ commands:
           command: |
             echo "In revert-migrations"
             ## Example: kvdb.io
-            SUCCESS=$(curl --insecure https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_<< parameters.id >>)
+            SUCCESS=$(curl -s --insecure https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_<< parameters.id >>)
             echo $SUCCESS
             #SUCCESS=$(curl --insecure  https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.id >>)
             ## Logic for reverting the database state
@@ -618,10 +618,10 @@ jobs:
             if [ -n ${CURL_RESULT} ]
             then
                 echo "Curl success"
-                return 0
+                exit 0
             else
                 echo "Curl failure"
-                return 1
+                exit 5
             fi
       - run:
           name: Frontend smoke test.
