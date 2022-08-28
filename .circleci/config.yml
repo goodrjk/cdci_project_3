@@ -587,8 +587,8 @@ jobs:
       - image: amazon/aws-cli
         #- image: alpine:latest
     steps:
-      #      - attach_workspace:
-      #      at: ~/
+      - attach_workspace:
+          at: ~/
 #      - run:
 #          name: Install dependencies - curl
 #          command: |
@@ -597,10 +597,10 @@ jobs:
 #          name: Get backend url
 #          command: |
 #            # your code here
-#      - run:
-#          name: Install dependencies - tar gzip
-#          command: |
-#            yum -y install tar gzip
+      - run:
+          name: Install dependencies - tar gzip
+          command: |
+            yum -y install tar gzip
       - run:
           name: Backend smoke test.
           command: |
@@ -612,7 +612,7 @@ jobs:
             export BACKEND_TGT="${API_URL}/api/status"
             echo "BACKEND_TGT = ${BACKEND_TGT}"
             export CURL_RESULT=`curl -s ${BACKEND_TGT} | grep ok`
-            echo "CURL_RESULT = ${CURL_RESULT}"
+            echo "CURL_RESULT = x${CURL_RESULT}x"
 
             if [ -n ${CURL_RESULT} ]
             then
