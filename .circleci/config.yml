@@ -18,6 +18,7 @@ commands:
           command: |
             aws s3 rm s3://udapeople-<< parameters.id >> --recursive
             #aws s3 rb s3://udapeople-<< parameters.id >> --force
+            sleep 60
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-BackEnd-<< parameters.id >>
             aws cloudformation delete-stack --region << parameters.region >> --stack-name UdaPeople-Frontend-<< parameters.id >>
 
@@ -587,8 +588,6 @@ jobs:
       - image: amazon/aws-cli
         #- image: alpine:latest
     steps:
-      - attach_workspace:
-          at: ~/
 #      - run:
 #          name: Install dependencies - curl
 #          command: |
@@ -601,6 +600,8 @@ jobs:
           name: Install dependencies - tar gzip
           command: |
             yum -y install tar gzip
+      - attach_workspace:
+          at: ~/
       - run:
           name: Backend smoke test.
           command: |
