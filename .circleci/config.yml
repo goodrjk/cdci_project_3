@@ -403,6 +403,10 @@ jobs:
               echo "Successful migration"
               # Using kvdb.io
               curl https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            else  
+              echo "Migration not necessary or not successful"
+              # Using kvdb.io
+              curl https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
      # Here's where you will add some code to rollback on failure      
       - destroy-environment:
@@ -583,8 +587,8 @@ jobs:
       - image: amazon/aws-cli
         #- image: alpine:latest
     steps:
-      - attach_workspace:
-          at: ~/
+      #      - attach_workspace:
+      #      at: ~/
 #      - run:
 #          name: Install dependencies - curl
 #          command: |
@@ -593,6 +597,10 @@ jobs:
 #          name: Get backend url
 #          command: |
 #            # your code here
+#      - run:
+#          name: Install dependencies - tar gzip
+#          command: |
+#            yum -y install tar gzip
       - run:
           name: Backend smoke test.
           command: |
