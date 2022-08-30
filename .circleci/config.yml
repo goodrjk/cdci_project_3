@@ -461,7 +461,10 @@ jobs:
           name: Install dependencies - npm
           command: |
             cd frontend
+            echo "BOB=JOE" >> .env
+            cat .env
             npm install
+            cat .env
 
       - run:
           name: Get backend url
