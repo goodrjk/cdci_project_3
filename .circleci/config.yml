@@ -58,24 +58,6 @@ commands:
 #            fi
             
 jobs:
-  patch-node:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-build]
-      - run:
-          name: Audit fix
-          command: |
-            cd backend
-            npm install
-            npm audit fix 
-            npm audit fix --audit-level=critical
-            npm audit fix --audit-level=critical --force
-      - save_cache:
-          paths: [backend/node_modules]
-          key: backend-build
 
   build-frontend:
     docker:
@@ -213,106 +195,6 @@ jobs:
           event: on_fail
           region: us-east-1
 
-  temp-deploy-infra:
-    docker:
-      #- image: amazon/aws-cli
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - run: pwd
-      - run: ls -al
-      - run: echo "Bob" > stuff.txt
-      - run: cat stuff.txt .circleci/ansible/inventory.txt
-      - run: echo "Sue" >> .circleci/ansible/inventory.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/stuff.txt
-            - project/.circleci/ansible/inventory.txt
-
-  alpine-late-test:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - run:
-          name: Install dependencies - curl
-          command: |
-            apk add --update curl
-      - run:
-          name: Check commands
-          command: |
-            which curl
-      - run:
-          name: Bye
-          command: |
-            exit 1
-
-  alpine-test:
-    docker:
-      - image: python:3.7-alpine3.11
-    environment:
-      PATH: "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin"
-    steps:
-      - run:
-          name: Install dependencies - ssh
-          command: |
-            apk add --update openssh-client
-      - run:
-          name: Install dependencies - git
-          command: |
-            apk add --update git
-      - add_ssh_keys:
-          fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Install dependencies - pip
-          command: |
-            python3 -m pip install --upgrade pip
-      - run:
-          name: Install dependencies - awscli
-          command: |
-            python3 -m pip install --user awscli
-      - run:
-          name: Install dependencies - ansible
-          command: |
-            apk add --update ansible 
-      - run:
-          name: Install dependencies - tar
-          command: |
-            apk add --update tar
-      #- run: find /root -name \*aws\* -print 
-      - run:
-          name: Chg path
-          command: |
-            echo $PATH  
-            export PATH="$PATH:/root/.local/bin"  
-            echo $PATH  
-      - run:
-          name: Check commands
-          command: |
-            which ssh
-            which ansible
-            which tar
-            which /root/.local/bin/aws
-            which aws
-                        
-  amazon-test:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - run: ls -al /usr/bin
-      - run:
-          name: Check commands
-          command: |
-            which aws
-            which ssh
-            which tar
-            which gzip
-            which git
-            which ansible
-            which curl
-                        
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
@@ -335,7 +217,6 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
-          #fingerprints: ["0c:55:f7:d7:ad:e3:73:19:0b:e6:c6:46:5c:04:76:94"] 
       - attach_workspace:
           at: ~/
       - run: pwd
@@ -539,13 +420,6 @@ jobs:
           name: Install dependencies - npm
           command: |
             apk add --update npm
-      - run:
-          name: Check commands
-          command: |
-            which ssh
-            which ansible
-            which tar
-            which aws
                         
       - run:
           name: Build backend .env file
