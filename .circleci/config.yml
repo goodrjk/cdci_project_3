@@ -584,8 +584,8 @@ jobs:
                 aws s3 rm "s3://udapeople-${OldWorkflow}" --recursive
                 sleep 30
               fi
-              aws cloudformation delete-stack --region us-east-1 --stack-name "UdaPeople-BackEnd-${OldWorkflow}" \
-              aws cloudformation delete-stack --region us-east-1 --stack-name "UdaPeople-FrontEnd-${OldWorkflow}" \
+              aws cloudformation delete-stack --region us-east-1 --stack-name "UdaPeople-BackEnd-${OldWorkflow}" 
+              aws cloudformation delete-stack --region us-east-1 --stack-name "UdaPeople-FrontEnd-${OldWorkflow}" 
             fi
 
 workflows:
