@@ -560,8 +560,10 @@ jobs:
             for STACK in ${STACKS[@]}
             do
               echo ${STACK} 
-              if [[ "${STACK}" == "Bob" ]]
+              if [[ "${STACK}" =~ ${CIRCLE_WORKFLOW_ID:0:7} ]]
               then
+                echo "Keep the good one"
+              else
                 echo "Commented out actual removal"
                 #aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
                 #aws cloudformation delete-stack --region us-east-1 --stack-name "UdaPeople-BackEnd-${OldWorkflowID}"
