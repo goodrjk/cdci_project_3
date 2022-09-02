@@ -75,9 +75,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
-      - run: cat OldWorkflow.txt
       - restore_cache:
           keys: [backend-build]
       - run:
@@ -95,6 +92,9 @@ jobs:
       - image: cimg/node:13.8.0
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
+      - run: cat OldWorkflow.txt
       - restore_cache:
           keys: [frontend-build]
       - run:
