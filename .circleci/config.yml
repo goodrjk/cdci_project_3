@@ -37,7 +37,6 @@ commands:
             ## Example: kvdb.io
             SUCCESS=$(curl -s --insecure https://kvdb.io/Lck4eAGtHHFe4pdRWbatwJ/migration_<< parameters.id >>)
             echo $SUCCESS
-            #SUCCESS=$(curl --insecure  https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration_<< parameters.id >>)
             ## Logic for reverting the database state
             if (( $SUCCESS == 1 ));
             then
@@ -47,16 +46,6 @@ commands:
                 echo "Ran migration:revert"
             fi  
           
-#            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-#            SUCCESS = 1
-#            if(( $SUCCESS==1 )); 
-#            then
-#              cd ~/project/backend
-#              npm install
-#              npm run migrations:revert
-#              exit 1
-#            fi
-            
 jobs:
 
   build-frontend:
@@ -225,10 +214,6 @@ jobs:
           fingerprints: ["63:9f:9c:a0:21:84:af:01:f2:a6:c8:16:f8:93:02:13"] 
       - attach_workspace:
           at: ~/
-      - run: pwd
-      - run: which ssh
-      - run: ls -al
-      - run: env
       - run: cat .circleci/ansible/inventory.txt
       - run:
           name: Install dependencies - pip
@@ -298,7 +283,6 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-     # Here's where you will add some code to rollback on failure      
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
@@ -353,10 +337,7 @@ jobs:
           name: Install dependencies - npm
           command: |
             cd frontend
-            echo "BOB=JOE" >> .env
-            cat .env
             npm install
-            cat .env
 
       - run:
           name: Get backend url
@@ -462,9 +443,6 @@ jobs:
             cd ..
             # Zip the directory
             tar -C backend -czf artifact.tar.gz .
-            pwd
-            ls -al
-            ls -al backend
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
@@ -472,7 +450,6 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-      # Rollback on failure      
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
@@ -483,16 +460,7 @@ jobs:
   smoke-test:
     docker:
       - image: amazon/aws-cli
-        #- image: alpine:latest
     steps:
-#      - run:
-#          name: Install dependencies - curl
-#          command: |
-#            apk add --update curl
-#      - run:
-#          name: Get backend url
-#          command: |
-#            # your code here
       - run:
           name: Install dependencies - tar gzip
           command: |
@@ -506,11 +474,10 @@ jobs:
             # Fetch and prepare the BACKEND_IP env var
             export BACKEND_IP=$(tail -1 .circleci/ansible/inventory.txt)
             export API_URL="http://${BACKEND_IP}:3030"
-            echo "API_URL = ${API_URL}"
             export BACKEND_TGT="${API_URL}/api/status"
             echo "BACKEND_TGT = ${BACKEND_TGT}"
             export CURL_RESULT=`curl -s ${BACKEND_TGT} | grep ok`
-            echo "CURL_RESULT = x${CURL_RESULT}x"
+            echo "CURL_RESULT = ${CURL_RESULT}"
 
             if [ -n ${CURL_RESULT} ]
             then
@@ -527,14 +494,12 @@ jobs:
             echo "FRONT URL = ${URL}" 
             export CURL_RESULT=`curl -s ${URL} | grep Welcome`
             echo "CURL_RESULT = ${CURL_RESULT}"
-            #if curl -s ${URL} | grep "Welcome"
             if [ -n ${CURL_RESULT} ]
             then
                 exit 0
             else
                 exit 5
             fi
-      # Here's where you will add some code to rollback on failure  
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
@@ -561,7 +526,6 @@ jobs:
                --stack-name InitialStack \
                --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
                --tags project=udapeople
-      # Here's where you will add some code to rollback on failure  
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           event: on_fail
@@ -579,7 +543,7 @@ jobs:
           command: |
             
             ## Fetch the Old workflow ID
-            export OldWorkflowID=$(aws cloudformation \
+            export OldWorkflowID=$(aws cloudformation --region us-east-1 \
                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                --no-paginate --output text)
             echo "OldWorkflowID = ${OldWorkflowID}"
@@ -587,6 +551,9 @@ jobs:
             ## Fetch the stack names          
             export STACKS=($(aws cloudformation --region us-east-1 list-stacks --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            export U_STACKS=($(aws cloudformation --region us-east-1 list-stacks --query "StackSummaries[*].StackName" \
+                --stack-status-filter UPDATE_COMPLETE --no-paginate --output text)) 
+            STACKS+=(${U_STACKS[@]})
             echo Stack names: "${STACKS[@]}"         
 
             ## You can use any condition like:
@@ -608,7 +575,7 @@ jobs:
             for STACK in ${STACKS[@]}
             do
               echo ${STACK} 
-              if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+              if [[ "${STACK}" == "${OldWorkflowID}" ]]
               then
                 echo "Commented out actual removal"
                 #aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
@@ -620,9 +587,6 @@ jobs:
 workflows:
   default:
     jobs:
-#      - amazon-test
-#     - alpine-test
-#      - alpine-late-test
       - build-frontend
       - build-backend
       - test-frontend:
@@ -638,7 +602,6 @@ workflows:
           filters:
             branches:
               only: [master]
-#      - temp-deploy-infra
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
