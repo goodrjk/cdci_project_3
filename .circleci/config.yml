@@ -481,7 +481,7 @@ jobs:
 
             if [ -n ${CURL_RESULT} ]
             then
-          echo "Curl success"
+                echo "Curl success"
                 exit 0
             else
                 echo "Curl failure"
