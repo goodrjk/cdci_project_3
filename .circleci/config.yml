@@ -539,14 +539,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Get old stack workflow id
+          name: Remove old stacks and files
           command: |
             
             ## Fetch the Old workflow ID
-            export OldWorkflowID=$(aws cloudformation --region us-east-1 \
+            export WorkflowIDs=($(aws cloudformation --region us-east-1 \
                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-               --no-paginate --output text)
-            echo "OldWorkflowID = ${OldWorkflowID}"
+               --no-paginate --output text))
+            echo "WorkflowIDs = ${WorkflowIDs[@]}"
             echo "CIRCLE_WORKFLOW_ID = ${CIRCLE_WORKFLOW_ID:0:7}"
             ## Fetch the stack names          
             export STACKS=($(aws cloudformation --region us-east-1 list-stacks --query "StackSummaries[*].StackName" \
@@ -556,26 +556,11 @@ jobs:
             STACKS+=(${U_STACKS[@]})
             echo Stack names: "${STACKS[@]}"         
 
-            ## You can use any condition like:
-            ## if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
-            ## if [[ "${OldWorkflowID}" =~ "${STACKS[@]}"  ]]
-            #if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
-            #then
-            ## your code goes here
-            #else
-            ## your code goes here
-            #fi
-            
-
-      - run:
-          name: Remove old stacks and files
-          command: |
             echo "Removing old stacks (Commented out)"
-            echo "OldWorkflowID = ${OldWorkflowID}"
             for STACK in ${STACKS[@]}
             do
               echo ${STACK} 
-              if [[ "${STACK}" == "${OldWorkflowID}" ]]
+              if [[ "${STACK}" == "Bob" ]]
               then
                 echo "Commented out actual removal"
                 #aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
