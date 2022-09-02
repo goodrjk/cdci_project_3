@@ -61,7 +61,10 @@ jobs:
             cd frontend
             npm install
             npm run build
+            pwd
             echo "BobbyJoe" > OldWorkflow.txt
+            ls -al
+            cat OldWorkflow.txt
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
