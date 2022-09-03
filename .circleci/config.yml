@@ -527,9 +527,7 @@ jobs:
                --no-paginate --output text)
             echo "OldWorkflowID = ${OldWorkflowID}"
             echo "CIRCLE_WORKFLOW_ID = ${CIRCLE_WORKFLOW_ID:0:7}"
-            pwd
             echo ${OldWorkflowID} > OldWorkflow.txt
-            ls -al 
 
             # Update stack
             aws cloudformation deploy \
@@ -538,6 +536,7 @@ jobs:
                --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
                --tags project=udapeople
           no_output_timeout: 30m
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -568,14 +567,6 @@ jobs:
             OldWorkflow=$(cat OldWorkflow.txt)
             echo "OldWorkflow = ${OldWorkflow}"
             echo "CIRCLE_WORKFLOW_ID = ${CIRCLE_WORKFLOW_ID:0:7}"
-            ## Fetch the stack names          
-            export STACKS=($(aws cloudformation --region us-east-1 list-stacks --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            export U_STACKS=($(aws cloudformation --region us-east-1 list-stacks --query "StackSummaries[*].StackName" \
-                --stack-status-filter UPDATE_COMPLETE --no-paginate --output text)) 
-            STACKS+=(${U_STACKS[@]})
-            echo Stack names: "${STACKS[@]}"         
-            aws s3 ls
 
             if [[ "${OldWorkflow}" != ${CIRCLE_WORKFLOW_ID:0:7} ]]
             then
