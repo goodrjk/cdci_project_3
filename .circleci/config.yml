@@ -531,8 +531,9 @@ jobs:
 
             # Update stack
             aws cloudformation deploy \
+               --region us-east-1 \
                --template-file .circleci/files/cloudfront.yml \
-               --stack-name NewInitialStack \
+               --stack-name InitialStack \
                --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
                --tags project=udapeople
           no_output_timeout: 30m
